@@ -10,6 +10,8 @@ class gameScene extends Phaser.Scene {
     }
 
     create(){
+        // stats
+        this.maxPlayerBagLength = 3;
         //extra money
         this.extraMoney = 10; //чаевые
         //Price
@@ -18,9 +20,25 @@ class gameScene extends Phaser.Scene {
             tekila: 200,
         }
 
+        //costGroup
+        // this.costGroup = [
+        //     {
+        //         name: 'beer',
+        //         priceCost: 100, 
+        //         img: this.add.image()
+        //     }
+        // ]
+
         //texts
         this.noMoneyText = this.add.text(config.width * 0.3, config.height * 0.5, `У вас не хватает денег!`);
         this.noMoneyText.setVisible(false);
+
+        this.noLengthInBagText = this.add.text(config.width * 0.3, config.height * 0.5, `У вас нет места в сумке`); 
+        this.noLengthInBagText.setVisible(false);
+
+        this.noBeerInYourBag = this.add.text(config.width * 0.3, config.height * 0.5, `У вас нет пива в сумке`);
+        this.noBeerInYourBag.setVisible(false);
+
 
         // Score 
         this.score = 1000;
@@ -36,23 +54,35 @@ class gameScene extends Phaser.Scene {
         this.player.setCollideWorldBounds();
         this.player.setScale(1.3);
         this.player.speed = 100;
+        this.player.bag = [];
 
         // table
         this.table = this.physics.add.sprite(config.width * 0.5, config.height * 0.9, 'table');
+        this.table.setVisible(false);
+        this.table.setInteractive(false);
         // this.table.setDepth(0.3);
 
         // beer
-        this.beer = this.physics.add.sprite(config.width * 0.1, config.height * 0.3, 'beer');
+        this.beer = this.physics.add.sprite(config.width * 0.3, config.height * 0.3, 'beer');
         this.beer.setScale(1.3);
 
+        // cost beer
+        this.costBeer = this.physics.add.sprite(config.width * 0.8, config.height * 0.3, 'beer');
+        this.costBeer.setTintFill(0xfff234);
+        this.costBeer.setScale(1.3);
+        
         // overlaps
         this.physics.add.overlap(this.player, this.beer, function(){
             this.getBeer(this.player, this.beer, this.buyPrice);
         }, null, this);
 
-        this.physics.add.overlap(this.player, this.table, function(){
-            this.costBeer(this.player, this.table);
-        }, null, this)
+        this.physics.add.overlap(this.player, this.costBeer, function(){
+            this.costBeerFun();
+        }, null, this);
+
+        // this.physics.add.overlap(this.player, this.table, function(){
+        //     this.costBeer(this.player, this.table);
+        // }, null, this);
 
     }
 
@@ -61,40 +91,68 @@ class gameScene extends Phaser.Scene {
         this.scoreText.setText(`Score = ${this.score}`);
     }
 
-
-    costBeer(player, table){
-        if(!table.hasOverlapped && !player.hasOverlapped){
-            table.hasOverlapped = true;
-            if(this.beer.setVisible(false)){
-                this.score += this.buyPrice['beer'] + Math.floor(Math.random() * this.extraMoney);
-                this.beer.setVisible(true);
-                this.beer.setActive(true);
-                this.beer.hasOverlapped = false;
-                table.hasOverlapped = true;
-                console.log('Вы продали пиво!');
-                setTimeout(()=>{
-                    table.hasOverlapped = false;
-                }, 1000);
-            }else{
-                console.log("Возьми пиво");
-            }
+    costBeerFun(){
+        if(this.player.bag.includes('beer')){
+            console.log("Cool beer");
+            this.score += this.buyPrice['beer'] + Math.floor(Math.random() * this.extraMoney);
+            this.player.bag.pop("beer");
+            this.beer.setActive(true);
+            this.beer.setVisible(true);
+            this.beer.hasOverlapped = false;
+            this.costBeer.destroy();
         }
+        else{
+            this.noBeerInYourBag.setVisible(true);
+            setTimeout(()=>{
+                this.noBeerInYourBag.setVisible(false);
+            }, 1400);
+            return;
+        }
+
     }
 
-    getBeer(player, beer){
+    // costBeer(player, table){
+    //     if(!table.hasOverlapped && !player.hasOverlapped){
+    //         table.hasOverlapped = true;
+    //         if(this.beer.setVisible(false)){
+    //             this.score += this.buyPrice['beer'] + Math.floor(Math.random() * this.extraMoney);
+    //             this.beer.setVisible(true);
+    //             this.beer.setActive(true);
+    //             this.beer.hasOverlapped = false;
+    //             // table.hasOverlapped = true;
+    //             console.log('Вы продали пиво!');
+    //             setTimeout(()=>{
+    //                 table.hasOverlapped = false;
+    //             }, 1000);
+    //         }else{
+    //             console.log("Возьми пиво");
+    //         }
+    //     }
+    // }
+
+    getBeer(){
         if(this.score > this.buyPrice['beer']){
-            if(!beer.hasOverlapped && !player.hasOverlapped){
+            if(!this.beer.hasOverlapped && !this.player.hasOverlapped && this.player.bag.length < this.maxPlayerBagLength){
+                this.player.bag.push('beer');
                 this.score -= this.buyPrice['beer'];
-                beer.hasOverlapped = true;
-                beer.setActive(false);
-                beer.setVisible(false);
+                console.log( this.player.bag);
+                this.beer.hasOverlapped = true;
+                this.beer.setActive(false);
+                this.beer.setVisible(false);
                 console.log("Вы взяли пиво");
             }
         }else{
-            this.noMoneyText.setVisible(true);
-            setTimeout(()=>{
-                this.noMoneyText.setVisible(false);
-            }, 1400);
+            if(this.player.bag.length < this.maxPlayerBagLength){
+                this.noLengthInBagText.setVisible(true);
+                setTimeout(()=>{
+                    this.noLengthInBagText.setVisible(false);
+                }, 1400);
+            }else{
+                this.noMoneyText.setVisible(true);
+                setTimeout(()=>{
+                    this.noMoneyText.setVisible(false);
+                }, 1400);
+            }
         }
        
     }

@@ -10,6 +10,10 @@ class gameScene extends Phaser.Scene {
     }
 
     create(){
+        this.costsBeer = this.add.group();
+        this.costsBeer.inputEnableChildren = true;
+        //orders
+        this.orders = 0;
         // stats
         this.maxPlayerBagLength = 3;
         //extra money
@@ -56,39 +60,60 @@ class gameScene extends Phaser.Scene {
         this.player.speed = 100;
         this.player.bag = [];
 
-        // table
-        this.table = this.physics.add.sprite(config.width * 0.5, config.height * 0.9, 'table');
-        this.table.setVisible(false);
-        this.table.setInteractive(false);
-        // this.table.setDepth(0.3);
+         // beer
+         this.beer = this.physics.add.sprite(config.width * 0.3, config.height * 0.3, 'beer');
+         this.beer.setScale(1.3);
 
-        // beer
-        this.beer = this.physics.add.sprite(config.width * 0.3, config.height * 0.3, 'beer');
-        this.beer.setScale(1.3);
-
-        // cost beer
-        this.costBeer = this.physics.add.sprite(config.width * 0.8, config.height * 0.3, 'beer');
-        this.costBeer.setTintFill(0xfff234);
-        this.costBeer.setScale(1.3);
-        
         // overlaps
         this.physics.add.overlap(this.player, this.beer, function(){
             this.getBeer(this.player, this.beer, this.buyPrice);
         }, null, this);
 
-        this.physics.add.overlap(this.player, this.costBeer, function(){
+        this.physics.add.overlap(this.player, this.costsBeer, function(){
             this.costBeerFun();
         }, null, this);
-
-        // this.physics.add.overlap(this.player, this.table, function(){
-        //     this.costBeer(this.player, this.table);
-        // }, null, this);
-
     }
 
     update(){
         this.movePlayerManager();
         this.scoreText.setText(`Score = ${this.score}`);
+
+        if(this.orders == 0){
+            this.createOrder();
+        }
+    }
+
+    createOrder(){
+        let colOrder = Math.floor(Math.random() * 4);
+        console.log(colOrder)
+        switch(colOrder){
+            case 1: 
+                this.orders = 1;
+                this.costsBeer.add(this.createBeer(0.8, 0.3));
+                break;
+            case 2: 
+                this.orders = 2;
+
+                this.costsBeer.add(this.createBeer(0.8, 0.3));
+                this.costsBeer.add(this.createBeer(0.8, 0.6));
+                break;
+            case 3: 
+                this.orders = 3;
+
+                this.costsBeer.add(this.createBeer(0.8, 0.3));
+                this.costsBeer.add(this.createBeer(0.8, 0.6));
+                this.costsBeer.add(this.createBeer(0.8, 0.9));
+                
+                break;
+                
+        }
+    }
+
+    createBeer(x, y){
+        let costBeer = this.physics.add.sprite(config.width * x, config.height * y, 'beer');
+        costBeer.setTintFill(0xfff234);
+        costBeer.setScale(1.3);
+        return costBeer;
     }
 
     costBeerFun(){
@@ -99,7 +124,9 @@ class gameScene extends Phaser.Scene {
             this.beer.setActive(true);
             this.beer.setVisible(true);
             this.beer.hasOverlapped = false;
-            this.costBeer.destroy();
+            console.log(this.costsBeer);
+            // this.costsBeer.destroy();
+            this.orders -= 1;
         }
         else{
             this.noBeerInYourBag.setVisible(true);
@@ -110,25 +137,6 @@ class gameScene extends Phaser.Scene {
         }
 
     }
-
-    // costBeer(player, table){
-    //     if(!table.hasOverlapped && !player.hasOverlapped){
-    //         table.hasOverlapped = true;
-    //         if(this.beer.setVisible(false)){
-    //             this.score += this.buyPrice['beer'] + Math.floor(Math.random() * this.extraMoney);
-    //             this.beer.setVisible(true);
-    //             this.beer.setActive(true);
-    //             this.beer.hasOverlapped = false;
-    //             // table.hasOverlapped = true;
-    //             console.log('Вы продали пиво!');
-    //             setTimeout(()=>{
-    //                 table.hasOverlapped = false;
-    //             }, 1000);
-    //         }else{
-    //             console.log("Возьми пиво");
-    //         }
-    //     }
-    // }
 
     getBeer(){
         if(this.score > this.buyPrice['beer']){

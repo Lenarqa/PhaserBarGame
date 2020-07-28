@@ -10,6 +10,21 @@ class gameScene extends Phaser.Scene {
     }
 
     create(){
+        //extra money
+        this.extraMoney = 10; //чаевые
+        //Price
+        this.buyPrice = {
+            beer: 100,
+            tekila: 200,
+        }
+
+        //texts
+        this.noMoneyText = this.add.text(config.width * 0.3, config.height * 0.5, `У вас не хватает денег!`);
+        this.noMoneyText.setVisible(false);
+
+        // Score 
+        this.score = 1000;
+        this.scoreText = this.add.text(config.width * 0.02, config.height * 0.05, `Score = ${this.score}`);
         // cursorKey
         this.cursorKey = this.input.keyboard.createCursorKeys();
 
@@ -32,7 +47,7 @@ class gameScene extends Phaser.Scene {
 
         // overlaps
         this.physics.add.overlap(this.player, this.beer, function(){
-            this.getBeer(this.player, this.beer);
+            this.getBeer(this.player, this.beer, this.buyPrice);
         }, null, this);
 
         this.physics.add.overlap(this.player, this.table, function(){
@@ -43,17 +58,19 @@ class gameScene extends Phaser.Scene {
 
     update(){
         this.movePlayerManager();
+        this.scoreText.setText(`Score = ${this.score}`);
     }
 
 
     costBeer(player, table){
-
         if(!table.hasOverlapped && !player.hasOverlapped){
             table.hasOverlapped = true;
             if(this.beer.setVisible(false)){
+                this.score += this.buyPrice['beer'] + Math.floor(Math.random() * this.extraMoney);
                 this.beer.setVisible(true);
                 this.beer.setActive(true);
                 this.beer.hasOverlapped = false;
+                table.hasOverlapped = true;
                 console.log('Вы продали пиво!');
                 setTimeout(()=>{
                     table.hasOverlapped = false;
@@ -62,16 +79,24 @@ class gameScene extends Phaser.Scene {
                 console.log("Возьми пиво");
             }
         }
-
     }
 
     getBeer(player, beer){
-        if(!beer.hasOverlapped && !player.hasOverlapped){
-            beer.hasOverlapped = true;
-            beer.setActive(false);
-            beer.setVisible(false);
-            console.log("Вы взяли пиво");
+        if(this.score > this.buyPrice['beer']){
+            if(!beer.hasOverlapped && !player.hasOverlapped){
+                this.score -= this.buyPrice['beer'];
+                beer.hasOverlapped = true;
+                beer.setActive(false);
+                beer.setVisible(false);
+                console.log("Вы взяли пиво");
+            }
+        }else{
+            this.noMoneyText.setVisible(true);
+            setTimeout(()=>{
+                this.noMoneyText.setVisible(false);
+            }, 1400);
         }
+       
     }
 
     movePlayerManager(){

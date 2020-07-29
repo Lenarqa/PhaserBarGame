@@ -10,8 +10,8 @@ class gameScene extends Phaser.Scene {
     }
 
     create(){
-        this.costsBeer = this.add.group();
-        this.costsBeer.inputEnableChildren = true;
+        this.newBeer = [];
+
         //orders
         this.orders = 0;
         // stats
@@ -23,15 +23,6 @@ class gameScene extends Phaser.Scene {
             beer: 100,
             tekila: 200,
         }
-
-        //costGroup
-        // this.costGroup = [
-        //     {
-        //         name: 'beer',
-        //         priceCost: 100, 
-        //         img: this.add.image()
-        //     }
-        // ]
 
         //texts
         this.noMoneyText = this.add.text(config.width * 0.3, config.height * 0.5, `У вас не хватает денег!`);
@@ -69,7 +60,7 @@ class gameScene extends Phaser.Scene {
             this.getBeer(this.player, this.beer, this.buyPrice);
         }, null, this);
 
-        this.physics.add.overlap(this.player, this.costsBeer, function(){
+        this.physics.add.overlap(this.player, this.newBeer, function(){
             this.costBeerFun();
         }, null, this);
     }
@@ -84,36 +75,33 @@ class gameScene extends Phaser.Scene {
     }
 
     createOrder(){
-        let colOrder = Math.floor(Math.random() * 4);
-        console.log(colOrder)
+        // let colOrder = Math.floor(Math.random() * 4);
+        let colOrder = 2;
+        console.log('colOrder = ' +  colOrder);
         switch(colOrder){
             case 1: 
                 this.orders = 1;
-                this.costsBeer.add(this.createBeer(0.8, 0.3));
+                this.newBeer.push(this.createBeer(0.8, 0.3));
                 break;
             case 2: 
                 this.orders = 2;
-
-                this.costsBeer.add(this.createBeer(0.8, 0.3));
-                this.costsBeer.add(this.createBeer(0.8, 0.6));
+                this.newBeer.push(this.createBeer(0.8, 0.3));
+                this.newBeer.push(this.createBeer(0.8, 0.6));
                 break;
             case 3: 
                 this.orders = 3;
-
-                this.costsBeer.add(this.createBeer(0.8, 0.3));
-                this.costsBeer.add(this.createBeer(0.8, 0.6));
-                this.costsBeer.add(this.createBeer(0.8, 0.9));
-                
+                this.createBeer(0.8, 0.3);
+                this.createBeer(0.8, 0.6);
+                this.createBeer(0.8, 0.9);
                 break;
-                
         }
     }
 
     createBeer(x, y){
-        let costBeer = this.physics.add.sprite(config.width * x, config.height * y, 'beer');
-        costBeer.setTintFill(0xfff234);
-        costBeer.setScale(1.3);
-        return costBeer;
+        this.costBeer = this.physics.add.sprite(config.width * x, config.height * y, 'beer');
+        this.costBeer.setTintFill(0xfff234);
+        this.costBeer.setScale(1.3);
+        return this.costBeer;
     }
 
     costBeerFun(){
@@ -124,9 +112,9 @@ class gameScene extends Phaser.Scene {
             this.beer.setActive(true);
             this.beer.setVisible(true);
             this.beer.hasOverlapped = false;
-            console.log(this.costsBeer);
-            // this.costsBeer.destroy();
+            this.newBeer.pop();
             this.orders -= 1;
+            console.log(this.newBeer.length + " newBeer")
         }
         else{
             this.noBeerInYourBag.setVisible(true);
